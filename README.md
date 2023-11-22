@@ -185,6 +185,6 @@ $ kubectl patch ingress mying --type='json' -p='[{"op": "add", "path": "/metadat
 
 Reference: [RFC 6901#Section-3](https://www.rfc-editor.org/rfc/rfc6901#section-3)
 
-> A JSON Pointer is a Unicode string (see [RFC4627], Section 3) containing a sequence of zero or more reference tokens, each prefixed by a '/' (%x2F) character.
+> A JSON Pointer is a Unicode string (see [RFC4627], Section 3) containing a sequence of zero or more reference tokens, each prefixed by a `/` (%x2F) character.
 >
-> Because the characters '~' (%x7E) and '/' (%x2F) have special meanings in JSON Pointer, '~' needs to be encoded as '~0' and '/' needs to be encoded as '~1' when these characters appear in a reference token.
+> Because the characters `~` (%x7E) and `/` (%x2F) have special meanings in JSON Pointer, `~` needs to be encoded as `~0` and `/` needs to be encoded as `~1` when these characters appear in a reference token.
