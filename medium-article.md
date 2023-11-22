@@ -35,7 +35,7 @@ Besides the difference listed above, `Initializer` is stuck in some open issues 
 
 The following diagram describes how `MutatingAdmissionWebhook` works in details:
 
-![](https://github.com/morvencao/kube-mutating-webhook-tutorial/blob/master/mutating-admission-webhook.jpg)
+![](https://github.com/allenliu88/kube-mutating-webhook-tutorial/blob/master/mutating-admission-webhook.jpg)
 
 The `MutatingAdmissionWebhook` needs three objects to function:
 
@@ -59,7 +59,7 @@ The `MutatingAdmissionWebhook` needs three objects to function:
    
 ## Tutorial for MutatingAdmissionWebhook
 
-Write a complete Webhook Admission Server may be intimidating. To make it easier, we'll write a simple Webhook Admission Server that implements injecting nginx sidecar container and volume. The complete code can be found in [kube-mutating-webhook-tutorial](https://github.com/morvencao/kube-mutating-webhook-tutorial). The project refers to [Kunernetes webhook example](https://github.com/kubernetes/kubernetes/tree/release-1.9/test/images/webhook) and [Istio sidecar injection implementation](https://github.com/istio/istio/tree/master/pilot/pkg/kube/inject).
+Write a complete Webhook Admission Server may be intimidating. To make it easier, we'll write a simple Webhook Admission Server that implements injecting nginx sidecar container and volume. The complete code can be found in [kube-mutating-webhook-tutorial](https://github.com/allenliu88/kube-mutating-webhook-tutorial). The project refers to [Kunernetes webhook example](https://github.com/kubernetes/kubernetes/tree/release-1.9/test/images/webhook) and [Istio sidecar injection implementation](https://github.com/istio/istio/tree/master/pilot/pkg/kube/inject).
 
 In the following sections, I'll show you how to write a working containerized webhook admission server and deploy it to a Kubernetes cluster.
 
@@ -189,7 +189,7 @@ func (whsvr *WebhookServer) mutate(ar *v1beta1.AdmissionReview) *v1beta1.Admissi
 	}
 }
 ```
-From the code above, the `mutate` function calls [mutationRequired](https://github.com/morvencao/kube-mutating-webhook-tutorial/blob/master/webhook.go#L98-L130) to detemine whether mutation is required or not. For those requiring mutation, the `mutate` function gets mutation 'patch' from another function [createPatch](https://github.com/morvencao/kube-mutating-webhook-tutorial/blob/master/webhook.go#L196-L205). Pay attention to the little trick in function `mutationRequired`, we skip the `pods` without annotation `sidecar-injector-webhook.morven.me/inject: true`. That will be mentioned latter when we deployment applications. For complete code, please refer to https://github.com/morvencao/kube-mutating-webhook-tutorial/blob/master/webhook.go.
+From the code above, the `mutate` function calls [mutationRequired](https://github.com/allenliu88/kube-mutating-webhook-tutorial/blob/master/webhook.go#L98-L130) to detemine whether mutation is required or not. For those requiring mutation, the `mutate` function gets mutation 'patch' from another function [createPatch](https://github.com/allenliu88/kube-mutating-webhook-tutorial/blob/master/webhook.go#L196-L205). Pay attention to the little trick in function `mutationRequired`, we skip the `pods` without annotation `sidecar-injector-webhook.morven.me/inject: true`. That will be mentioned latter when we deployment applications. For complete code, please refer to https://github.com/allenliu88/kube-mutating-webhook-tutorial/blob/master/webhook.go.
 
 #### Create Dockerfile and Build the Container
 
@@ -255,7 +255,7 @@ data:
         configMap:
           name: nginx-configmap
 ```
-From the above manifest, another ConfigMap including `nginx conf` is required. Here we put it in [nginxconfigmap.yaml](https://github.com/morvencao/kube-mutating-webhook-tutorial/blob/master/deploy/nginxconfigmap.yaml).
+From the above manifest, another ConfigMap including `nginx conf` is required. Here we put it in [nginxconfigmap.yaml](https://github.com/allenliu88/kube-mutating-webhook-tutorial/blob/master/deploy/nginxconfigmap.yaml).
 
 Then deploy the two `ConfigMap`s to cluster:
 ```
@@ -668,7 +668,7 @@ But there is a problem for this, with the above configurations, all of the pods 
 
 #### Control sidecar injector with `annotation`
 
-Thanks to flexibility of `MutatingAdmissionWebhook`, we can easily customized the mutating logic to filter resources with specified annotations. Remember the annotation `sidecar-injector-webhook.morven.me/inject: "true"` mentioned above? It can be used as an extra control on sidecar injector. I have written [some code](https://github.com/morvencao/kube-mutating-webhook-tutorial/blob/master/webhook.go#L98-L130) in webhook server to skip injecting for pod without the annotation.
+Thanks to flexibility of `MutatingAdmissionWebhook`, we can easily customized the mutating logic to filter resources with specified annotations. Remember the annotation `sidecar-injector-webhook.morven.me/inject: "true"` mentioned above? It can be used as an extra control on sidecar injector. I have written [some code](https://github.com/allenliu88/kube-mutating-webhook-tutorial/blob/master/webhook.go#L98-L130) in webhook server to skip injecting for pod without the annotation.
 
 Let's give it a try. In this case, we create another sleep application without `sidecar-injector-webhook.morven.me/inject: "true"` annotation in `podTemplateSpec`:
 ```

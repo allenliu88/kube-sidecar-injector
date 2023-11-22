@@ -1,4 +1,6 @@
-namespace: sidecar-injector
+# kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
 
 resources:
 - namespace.yaml
@@ -10,9 +12,11 @@ resources:
 - configmap.yaml
 - nginx-configmap.yaml
 
+## unified namespace of resources
+namespace: sidecar-injector
+
+## unified image name and tag of sidecar-injector image name
 images:
 - name: sidecar-injector
   newName: quay.io/morvencao/sidecar-injector
   newTag: latest
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization

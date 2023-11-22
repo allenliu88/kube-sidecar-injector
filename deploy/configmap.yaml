@@ -17,3 +17,7 @@ data:
     - name: nginx-conf
       configMap:
         name: nginx-configmap
+    labels:
+      hskp.io/managed: true
+    annotations:
+      hskp.io/injected: true

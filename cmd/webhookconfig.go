@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/allenliu88/kube-sidecar-injector/pkg/logger"
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -19,7 +20,7 @@ var (
 )
 
 func createOrUpdateMutatingWebhookConfiguration(caPEM *bytes.Buffer, webhookService, webhookNamespace string) error {
-	infoLogger.Println("Initializing the kube client...")
+	logger.InfoLogger.Println("Initializing the kube client...")
 
 	kubeconfig := os.Getenv("KUBECONFIG")
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -32,7 +33,7 @@ func createOrUpdateMutatingWebhookConfiguration(caPEM *bytes.Buffer, webhookServ
 	}
 	mutatingWebhookConfigV1Client := clientset.AdmissionregistrationV1()
 
-	infoLogger.Printf("Creating or updating the mutatingwebhookconfiguration: %s", webhookConfigName)
+	logger.InfoLogger.Printf("Creating or updating the mutatingwebhookconfiguration: %s", webhookConfigName)
 	fail := admissionregistrationv1.Fail
 	sideEffect := admissionregistrationv1.SideEffectClassNone
 	mutatingWebhookConfig := &admissionregistrationv1.MutatingWebhookConfiguration{
@@ -76,12 +77,12 @@ func createOrUpdateMutatingWebhookConfiguration(caPEM *bytes.Buffer, webhookServ
 	foundWebhookConfig, err := mutatingWebhookConfigV1Client.MutatingWebhookConfigurations().Get(context.TODO(), webhookConfigName, metav1.GetOptions{})
 	if err != nil && apierrors.IsNotFound(err) {
 		if _, err := mutatingWebhookConfigV1Client.MutatingWebhookConfigurations().Create(context.TODO(), mutatingWebhookConfig, metav1.CreateOptions{}); err != nil {
-			warningLogger.Printf("Failed to create the mutatingwebhookconfiguration: %s", webhookConfigName)
+			logger.WarningLogger.Printf("Failed to create the mutatingwebhookconfiguration: %s", webhookConfigName)
 			return err
 		}
-		infoLogger.Printf("Created mutatingwebhookconfiguration: %s", webhookConfigName)
+		logger.InfoLogger.Printf("Created mutatingwebhookconfiguration: %s", webhookConfigName)
 	} else if err != nil {
-		warningLogger.Printf("Failed to check the mutatingwebhookconfiguration: %s", webhookConfigName)
+		logger.WarningLogger.Printf("Failed to check the mutatingwebhookconfiguration: %s", webhookConfigName)
 		return err
 	} else {
 		// there is an existing mutatingWebhookConfiguration
@@ -96,12 +97,12 @@ func createOrUpdateMutatingWebhookConfiguration(caPEM *bytes.Buffer, webhookServ
 				reflect.DeepEqual(foundWebhookConfig.Webhooks[0].ClientConfig.Service, mutatingWebhookConfig.Webhooks[0].ClientConfig.Service)) {
 			mutatingWebhookConfig.ObjectMeta.ResourceVersion = foundWebhookConfig.ObjectMeta.ResourceVersion
 			if _, err := mutatingWebhookConfigV1Client.MutatingWebhookConfigurations().Update(context.TODO(), mutatingWebhookConfig, metav1.UpdateOptions{}); err != nil {
-				warningLogger.Printf("Failed to update the mutatingwebhookconfiguration: %s", webhookConfigName)
+				logger.WarningLogger.Printf("Failed to update the mutatingwebhookconfiguration: %s", webhookConfigName)
 				return err
 			}
-			infoLogger.Printf("Updated the mutatingwebhookconfiguration: %s", webhookConfigName)
+			logger.InfoLogger.Printf("Updated the mutatingwebhookconfiguration: %s", webhookConfigName)
 		}
-		infoLogger.Printf("The mutatingwebhookconfiguration: %s already exists and has no change", webhookConfigName)
+		logger.InfoLogger.Printf("The mutatingwebhookconfiguration: %s already exists and has no change", webhookConfigName)
 	}
 
 	return nil

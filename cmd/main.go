@@ -5,17 +5,13 @@ import (
 	"crypto/tls"
 	"flag"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
-)
 
-var (
-	infoLogger    *log.Logger
-	warningLogger *log.Logger
-	errorLogger   *log.Logger
+	"github.com/allenliu88/kube-sidecar-injector/pkg/logger"
+	"github.com/allenliu88/kube-sidecar-injector/pkg/model"
 )
 
 var (
@@ -25,11 +21,6 @@ var (
 )
 
 func init() {
-	// init loggers
-	infoLogger = log.New(os.Stderr, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	warningLogger = log.New(os.Stderr, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
-	errorLogger = log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-
 	// webhook server running namespace
 	webhookNamespace = os.Getenv("POD_NAMESPACE")
 }
@@ -53,28 +44,28 @@ func main() {
 	org := "morven.me"
 	caPEM, certPEM, certKeyPEM, err := generateCert([]string{org}, dnsNames, commonName)
 	if err != nil {
-		errorLogger.Fatalf("Failed to generate ca and certificate key pair: %v", err)
+		logger.ErrorLogger.Fatalf("Failed to generate ca and certificate key pair: %v", err)
 	}
 
 	pair, err := tls.X509KeyPair(certPEM.Bytes(), certKeyPEM.Bytes())
 	if err != nil {
-		errorLogger.Fatalf("Failed to load certificate key pair: %v", err)
+		logger.ErrorLogger.Fatalf("Failed to load certificate key pair: %v", err)
 	}
 
-	sidecarConfig, err := loadConfig(sidecarConfigFile)
+	sidecarConfig, err := model.LoadConfig(sidecarConfigFile)
 	if err != nil {
-		errorLogger.Fatalf("Failed to load configuration: %v", err)
+		logger.ErrorLogger.Fatalf("Failed to load configuration: %v", err)
 	}
 
 	// create or update the mutatingwebhookconfiguration
 	err = createOrUpdateMutatingWebhookConfiguration(caPEM, webhookServiceName, webhookNamespace)
 	if err != nil {
-		errorLogger.Fatalf("Failed to create or update the mutating webhook configuration: %v", err)
+		logger.ErrorLogger.Fatalf("Failed to create or update the mutating webhook configuration: %v", err)
 	}
 
 	whsvr := &WebhookServer{
-		sidecarConfig: sidecarConfig,
-		server: &http.Server{
+		SidecarConfig: sidecarConfig,
+		Server: &http.Server{
 			Addr:      fmt.Sprintf(":%v", port),
 			TLSConfig: &tls.Config{Certificates: []tls.Certificate{pair}},
 		},
@@ -83,12 +74,12 @@ func main() {
 	// define http server and server handler
 	mux := http.NewServeMux()
 	mux.HandleFunc(webhookInjectPath, whsvr.serve)
-	whsvr.server.Handler = mux
+	whsvr.Server.Handler = mux
 
 	// start webhook server in new rountine
 	go func() {
-		if err := whsvr.server.ListenAndServeTLS("", ""); err != nil {
-			errorLogger.Fatalf("Failed to listen and serve webhook server: %v", err)
+		if err := whsvr.Server.ListenAndServeTLS("", ""); err != nil {
+			logger.ErrorLogger.Fatalf("Failed to listen and serve webhook server: %v", err)
 		}
 	}()
 
@@ -97,6 +88,6 @@ func main() {
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	<-signalChan
 
-	infoLogger.Printf("Got OS shutdown signal, shutting down webhook server gracefully...")
-	whsvr.server.Shutdown(context.Background())
+	logger.InfoLogger.Printf("Got OS shutdown signal, shutting down webhook server gracefully...")
+	whsvr.Server.Shutdown(context.Background())
 }
